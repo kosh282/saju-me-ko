@@ -1,34 +1,16 @@
-# saju-me-ko
+# React + Vite
 
-Gemini API를 활용한 **사주 보기 웹 서비스**입니다.  
-생년월일·시간·성별 등 기본 정보를 입력하면 사주팔자를 계산하고, Gemini가 해석·조언을 생성해 보여줍니다.
+This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
 
-## 개요
+Currently, two official plugins are available:
 
-사용자는 웹에서 출생 정보를 입력합니다. 서버(또는 앱)가 사주 명식을 구성한 뒤, Gemini API에 구조화된 프롬프트를 보내 성격·운세·조언 등의 해석 문장을 받아 화면에 표시합니다.
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
 
-### 주요 흐름
+## React Compiler
 
-1. **입력** — 이름(선택), 생년월일, 출생 시각, 성별, 양력/음력
-2. **사주 계산** — 년·월·일·시 기둥(천간·지지) 등 명식 구성
-3. **AI 해석** — Gemini API로 명식 기반 해석·요약·조언 생성
-4. **결과 표시** — 사주 명식 + AI 해석을 웹 UI로 제공
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
 
-### 기술 포인트
+## Expanding the Oxlint configuration
 
-| 구분 | 내용 |
-|------|------|
-| AI | Google Gemini API (해석·자연어 생성) |
-| 프론트 | 출생 정보 폼, 결과(명식·해석) 화면 |
-| 백엔드 | 사주 계산 로직, Gemini 호출, API 키 보호 |
-| 보안 | Gemini API 키는 서버 측에서만 사용 (클라이언트 노출 금지) |
-
-### 목표
-
-- 입력만으로도 이해하기 쉬운 사주 해석 제공
-- 명식(구조 데이터)과 AI 해석(서술)을 함께 보여 신뢰감 확보
-- 부트캠프용으로 빠르게 동작하는 MVP 구성
-
-## 개발 환경
-
-- Node.js `v24.19.0` / npm `11.17.0` (권장)
+If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
