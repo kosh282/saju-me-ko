@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { askGemini } from './gemini'
 import { buildBasicChartPrompt } from './prompts'
 import ResultPanel from './ResultPanel'
 import './App.css'
+
+const hasApiKey = Boolean(import.meta.env.VITE_GEMINI_API_KEY)
 
 function ChoiceButtons({ label, hint, options, value, onChange, name }) {
   return (
@@ -54,6 +55,13 @@ function App() {
     setLoading(true)
 
     try {
+      if (!hasApiKey) {
+        throw new Error(
+          'API 키가 설정되지 않았습니다. Netlify 환경변수 VITE_GEMINI_API_KEY를 등록한 뒤 다시 배포하세요.',
+        )
+      }
+
+      const { askGemini } = await import('./gemini')
       const prompt = buildBasicChartPrompt({
         name: name || '미입력',
         gender: gender || '미입력',
@@ -145,6 +153,13 @@ function App() {
         <button type="submit" className="submit-btn" disabled={loading}>
           {loading ? '해석 중...' : '사주 보기'}
         </button>
+
+        {!hasApiKey && (
+          <p className="env-warning">
+            API 키가 빌드에 포함되지 않았습니다. Netlify 환경변수에{' '}
+            <code>VITE_GEMINI_API_KEY</code>를 등록한 뒤 재배포하세요.
+          </p>
+        )}
       </form>
 
       <ResultPanel

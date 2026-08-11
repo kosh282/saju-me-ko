@@ -1,9 +1,16 @@
-import { GoogleGenAI } from '@google/genai'
+import { GoogleGenAI } from '@google/genai/web'
 
-// Vite는 VITE_ 로 시작하는 환경변수만 클라이언트에서 사용 가능
 const apiKey = import.meta.env.VITE_GEMINI_API_KEY
 
-export const ai = new GoogleGenAI({ apiKey })
+function getClient() {
+  if (!apiKey) {
+    throw new Error(
+      'API 키가 없습니다. Netlify → Environment variables에 VITE_GEMINI_API_KEY를 등록한 뒤 다시 배포하세요.',
+    )
+  }
+
+  return new GoogleGenAI({ apiKey })
+}
 
 /**
  * Gemini Interactions API로 텍스트를 요청합니다.
@@ -11,11 +18,12 @@ export const ai = new GoogleGenAI({ apiKey })
  * @returns {Promise<string>}
  */
 export async function askGemini(input) {
+  const ai = getClient()
+
   const interaction = await ai.interactions.create({
     model: 'gemini-3.6-flash',
     input,
   })
 
-  // SDK 버전에 따라 camelCase / snake_case 둘 다 대비
   return interaction.outputText ?? interaction.output_text ?? ''
 }
