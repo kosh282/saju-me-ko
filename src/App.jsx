@@ -1,121 +1,163 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
+import { askGemini } from './gemini'
+import { buildBasicChartPrompt } from './prompts'
+import ResultPanel from './ResultPanel'
 import './App.css'
 
+function ChoiceButtons({ label, hint, options, value, onChange, name }) {
+  return (
+    <div className="field">
+      <span className="field-label" id={`${name}-label`}>
+        {label}
+      </span>
+      <p className="hint">{hint}</p>
+      <div
+        className="choice-buttons"
+        role="group"
+        aria-labelledby={`${name}-label`}
+      >
+        {options.map((option) => (
+          <button
+            key={option.value}
+            type="button"
+            className={`choice-btn ${value === option.value ? 'active' : ''}`}
+            aria-pressed={value === option.value}
+            onClick={() => onChange(option.value)}
+          >
+            {option.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 function App() {
-  const [count, setCount] = useState(0)
+  const [name, setName] = useState('')
+  const [birthDate, setBirthDate] = useState('')
+  const [birthTime, setBirthTime] = useState('')
+  const [gender, setGender] = useState('')
+  const [calendarType, setCalendarType] = useState('solar')
+
+  const [result, setResult] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  const genderLabel =
+    gender === 'male' ? '남자' : gender === 'female' ? '여자' : '미선택'
+  const calendarLabel = calendarType === 'lunar' ? '음력' : '양력'
+
+  async function handleSubmit(e) {
+    e.preventDefault()
+    setError('')
+    setResult('')
+    setLoading(true)
+
+    try {
+      const prompt = buildBasicChartPrompt({
+        name: name || '미입력',
+        gender: gender || '미입력',
+        calendar: calendarLabel,
+        birth: birthDate || '미입력',
+        time: birthTime || '시간미상',
+      })
+
+      const text = await askGemini(prompt)
+      setResult(text)
+    } catch (err) {
+      console.error(err)
+      setError(err?.message || 'Gemini API 호출에 실패했습니다.')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
+    <div className="page">
+      <header className="hero">
+        <p className="brand">saju-me-ko</p>
+        <h1>사주 입력</h1>
+        <p className="hero-desc">출생 정보를 입력해 주세요.</p>
+      </header>
+
+      <form className="form" onSubmit={handleSubmit}>
+        <div className="field">
+          <label htmlFor="name">이름</label>
+          <p className="hint">본명을 한글로 입력합니다.</p>
+          <input
+            id="name"
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="예: 홍길동"
+            autoComplete="name"
+          />
         </div>
-        <div>
-          <h1>Saju Me Ko</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
+
+        <div className="field">
+          <label htmlFor="birthDate">생년월일</label>
+          <p className="hint">태어난 날짜를 선택합니다.</p>
+          <input
+            id="birthDate"
+            type="date"
+            value={birthDate}
+            onChange={(e) => setBirthDate(e.target.value)}
+          />
         </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
+
+        <div className="field">
+          <label htmlFor="birthTime">태어난 시간</label>
+          <p className="hint">모를 경우 비워 두어도 됩니다.</p>
+          <input
+            id="birthTime"
+            type="time"
+            value={birthTime}
+            onChange={(e) => setBirthTime(e.target.value)}
+          />
+        </div>
+
+        <div className="field-row">
+          <ChoiceButtons
+            name="gender"
+            label="성별"
+            hint="사주 해석에 사용됩니다."
+            value={gender}
+            onChange={setGender}
+            options={[
+              { value: 'male', label: '남자' },
+              { value: 'female', label: '여자' },
+            ]}
+          />
+
+          <ChoiceButtons
+            name="calendar"
+            label="양력 / 음력"
+            hint="달력 기준을 고릅니다."
+            value={calendarType}
+            onChange={setCalendarType}
+            options={[
+              { value: 'solar', label: '양력' },
+              { value: 'lunar', label: '음력' },
+            ]}
+          />
+        </div>
+
+        <button type="submit" className="submit-btn" disabled={loading}>
+          {loading ? '해석 중...' : '사주 보기'}
         </button>
-      </section>
+      </form>
 
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+      <ResultPanel
+        loading={loading}
+        error={error}
+        result={result}
+        name={name}
+        genderLabel={genderLabel}
+        calendarLabel={calendarLabel}
+        birthDate={birthDate}
+        birthTime={birthTime}
+      />
+    </div>
   )
 }
 
