@@ -32,9 +32,9 @@
 
 .sidebar-title {
   margin: 0 0 0.35rem;
-  font-family: var(--font-display);
-  font-size: 1.15rem;
-  font-weight: 400;
+  font-family: var(--font-body);
+  font-size: 1.1rem;
+  font-weight: 700;
   color: var(--ink);
 }
 
@@ -68,6 +68,13 @@
   gap: 0.45rem;
 }
 
+.sidebar-list-item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.35rem;
+  align-items: stretch;
+}
+
 .sidebar-item {
   width: 100%;
   display: flex;
@@ -83,6 +90,34 @@
   transition:
     background-color 0.2s ease,
     border-color 0.2s ease;
+}
+
+.sidebar-delete-btn {
+  align-self: center;
+  min-width: 2.6rem;
+  min-height: 2.35rem;
+  padding: 0.35rem 0.55rem;
+  border: 1px solid rgba(155, 44, 44, 0.2);
+  border-radius: var(--radius);
+  background: rgba(155, 44, 44, 0.06);
+  color: #9b2c2c;
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.sidebar-delete-btn:hover:not(:disabled) {
+  background: rgba(155, 44, 44, 0.12);
+  border-color: rgba(155, 44, 44, 0.35);
+}
+
+.sidebar-delete-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .sidebar-item:hover {
@@ -141,8 +176,9 @@
 
 .brand {
   margin: 0;
-  font-family: var(--font-display);
-  font-size: clamp(1.85rem, 5vw, 2.35rem);
+  font-family: var(--font-body);
+  font-size: clamp(1.75rem, 5vw, 2.1rem);
+  font-weight: 700;
   letter-spacing: -0.02em;
   line-height: 1.15;
   color: var(--ink);
@@ -356,6 +392,65 @@
   cursor: not-allowed;
 }
 
+.form-actions {
+  display: grid;
+  gap: 0.55rem;
+  margin-top: 0.35rem;
+}
+
+.secondary-btn {
+  min-height: 2.85rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fffcf7;
+  color: var(--ink-soft);
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.secondary-btn:hover:not(:disabled) {
+  border-color: rgba(47, 111, 94, 0.45);
+  color: var(--accent);
+  background: #fff;
+}
+
+.secondary-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.delete-btn {
+  min-height: 2.25rem;
+  padding: 0.45rem 0.85rem;
+  border: 1px solid rgba(155, 44, 44, 0.25);
+  border-radius: var(--radius);
+  background: rgba(155, 44, 44, 0.08);
+  color: #9b2c2c;
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.delete-btn:hover:not(:disabled) {
+  background: rgba(155, 44, 44, 0.14);
+  border-color: rgba(155, 44, 44, 0.4);
+}
+
+.delete-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
 .error {
   margin: 0;
   color: #9b2c2c;
@@ -430,10 +525,10 @@
 
 .result-title {
   margin: 0 0 0.7rem;
-  font-family: var(--font-display);
-  font-size: clamp(1.45rem, 3vw, 1.75rem);
-  font-weight: 400;
-  line-height: 1.25;
+  font-family: var(--font-body);
+  font-size: clamp(1.35rem, 3vw, 1.6rem);
+  font-weight: 700;
+  line-height: 1.3;
   color: var(--ink);
 }
 
@@ -585,9 +680,9 @@
 
 .result-card-title {
   margin: 0;
-  font-family: var(--font-display);
-  font-size: 1.15rem;
-  font-weight: 400;
+  font-family: var(--font-body);
+  font-size: 1.05rem;
+  font-weight: 700;
   letter-spacing: -0.01em;
   color: var(--ink);
 }
@@ -600,9 +695,9 @@
 .result-block-text {
   margin: 0;
   white-space: pre-wrap;
-  line-height: 1.95;
-  font-family: var(--font-reading);
-  font-size: 1.02rem;
+  line-height: 1.85;
+  font-family: var(--font-body);
+  font-size: 0.98rem;
   font-weight: 400;
   color: var(--ink-soft);
   word-break: keep-all;
@@ -649,8 +744,8 @@
 }
 
 .fortune-summary-text {
-  font-family: var(--font-reading);
-  font-size: 0.98rem;
+  font-family: var(--font-body);
+  font-size: 0.96rem;
   line-height: 1.7;
   color: var(--ink);
 }

@@ -10,9 +10,10 @@
   --page-top: #d9e4df;
   --page-mid: #efe8dc;
   --page-bottom: #f7f1e8;
-  --font-display: 'Song Myung', 'Noto Serif KR', serif;
-  --font-body: 'Noto Sans KR', sans-serif;
-  --font-reading: 'Noto Serif KR', 'Noto Sans KR', serif;
+  --font-sans: Arial, 'Malgun Gothic', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+  --font-display: var(--font-sans);
+  --font-body: var(--font-sans);
+  --font-reading: var(--font-sans);
   --radius: 10px;
   --space: 1.25rem;
 }
@@ -43,4 +44,172 @@ body {
   display: flex;
   justify-content: center;
   padding: 2.5rem 1.25rem 3.5rem;
+}
+
+.auth-loading,
+.login-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: min(100%, 28rem);
+  min-height: 60vh;
+  animation: rise 0.5s ease both;
+}
+
+.auth-loading p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.login-card {
+  width: 100%;
+  padding: 2rem 1.75rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: calc(var(--radius) + 4px);
+  text-align: center;
+  box-shadow: 0 10px 28px rgba(28, 25, 20, 0.05);
+}
+
+.login-brand {
+  margin: 0 0 0.75rem;
+}
+
+.login-title {
+  margin: 0 0 0.65rem;
+  font-family: var(--font-body);
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.login-desc {
+  margin: 0 0 1.75rem;
+  font-size: 0.94rem;
+  line-height: 1.7;
+  color: var(--muted);
+}
+
+/* Google Sign-In 버튼 가이드 스타일 참고 */
+.google-login-btn {
+  width: 100%;
+  min-height: 44px;
+  padding: 0;
+  border: 1px solid #747775;
+  border-radius: 4px;
+  background: #fff;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.google-login-btn:hover:not(:disabled) {
+  background: #f7f8f8;
+  border-color: #747775;
+  box-shadow: 0 1px 3px rgba(60, 64, 67, 0.15);
+}
+
+.google-login-btn:active:not(:disabled) {
+  background: #ececec;
+}
+
+.google-login-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.google-login-btn-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 42px;
+  padding: 0 12px;
+}
+
+.google-login-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.google-login-text {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1;
+  color: #1f1f1f;
+  letter-spacing: 0.01em;
+}
+
+.login-note {
+  margin: 0.85rem 0 0;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.login-error {
+  margin: 1rem 0 0;
+  color: #9b2c2c;
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.auth-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(255, 252, 247, 0.9);
+}
+
+.auth-user {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--ink-soft);
+  line-height: 1.4;
+}
+
+.auth-user-label {
+  display: block;
+  margin-bottom: 0.15rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.auth-logout-btn {
+  flex-shrink: 0;
+  min-height: 2.1rem;
+  padding: 0.4rem 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fffcf7;
+  color: var(--ink-soft);
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.auth-logout-btn:hover:not(:disabled) {
+  border-color: rgba(47, 111, 94, 0.45);
+  color: var(--accent);
+}
+
+.auth-logout-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
 }

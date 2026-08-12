@@ -1,5 +1,3 @@
-import { supabase } from './supabase'
-
 function formatMeta(item) {
   const gender =
     item.gender === 'male' ? '남' : item.gender === 'female' ? '여' : '-'
@@ -14,6 +12,8 @@ export default function HistorySidebar({
   selectedId,
   onSelect,
   onNewSaju,
+  onDelete,
+  deletingId,
   error,
 }) {
   return (
@@ -39,7 +39,7 @@ export default function HistorySidebar({
 
       <ul className="sidebar-list">
         {items.map((item) => (
-          <li key={item.id}>
+          <li key={item.id} className="sidebar-list-item">
             <button
               type="button"
               className={`sidebar-item ${selectedId === item.id ? 'active' : ''}`}
@@ -48,34 +48,21 @@ export default function HistorySidebar({
               <span className="sidebar-item-name">{item.name || '이름 없음'}</span>
               <span className="sidebar-item-meta">{formatMeta(item)}</span>
             </button>
+            <button
+              type="button"
+              className="sidebar-delete-btn"
+              aria-label={`${item.name || '이름 없음'} 삭제`}
+              disabled={deletingId === item.id}
+              onClick={(e) => {
+                e.stopPropagation()
+                onDelete(item.id)
+              }}
+            >
+              {deletingId === item.id ? '…' : '삭제'}
+            </button>
           </li>
         ))}
       </ul>
     </aside>
   )
-}
-
-export async function fetchSajuReadings() {
-  const { data, error } = await supabase
-    .from('saju_readings')
-    .select(
-      'id, name, birth_date, birth_time, gender, calendar_type, result_text, created_at',
-    )
-    .order('created_at', { ascending: false })
-
-  if (error) throw error
-  return data ?? []
-}
-
-export async function saveSajuReading(payload) {
-  const { data, error } = await supabase
-    .from('saju_readings')
-    .insert(payload)
-    .select(
-      'id, name, birth_date, birth_time, gender, calendar_type, result_text, created_at',
-    )
-    .single()
-
-  if (error) throw error
-  return data
 }

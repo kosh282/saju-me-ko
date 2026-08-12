@@ -1,10 +1,16 @@
 import { useEffect, useRef, useState } from 'react'
+import { getUserLabel, signOut } from './auth'
+import { supabase } from './supabase'
 import { buildBasicChartPrompt } from './prompts'
 import ResultPanel from './ResultPanel'
-import HistorySidebar, {
+import HistorySidebar from './HistorySidebar'
+import LoginPage from './LoginPage'
+import {
+  createSajuReading,
+  deleteSajuReading,
   fetchSajuReadings,
-  saveSajuReading,
-} from './HistorySidebar'
+  updateSajuReading,
+} from './sajuReadings'
 import './App.css'
 
 const hasApiKey = Boolean(import.meta.env.VITE_GEMINI_API_KEY)
@@ -37,9 +43,24 @@ function ChoiceButtons({ label, hint, options, value, onChange, name }) {
   )
 }
 
+function buildPayload(name, birthDate, birthTime, gender, calendarType, resultText) {
+  return {
+    name: name || '미입력',
+    birth_date: birthDate || null,
+    birth_time: birthTime || null,
+    gender: gender || null,
+    calendar_type: calendarType,
+    result_text: resultText,
+  }
+}
+
 function App() {
   const formTopRef = useRef(null)
   const nameInputRef = useRef(null)
+
+  const [user, setUser] = useState(null)
+  const [authLoading, setAuthLoading] = useState(true)
+  const [signingOut, setSigningOut] = useState(false)
 
   const [name, setName] = useState('')
   const [birthDate, setBirthDate] = useState('')
@@ -49,18 +70,57 @@ function App() {
 
   const [result, setResult] = useState('')
   const [loading, setLoading] = useState(false)
+  const [savingInput, setSavingInput] = useState(false)
+  const [deletingId, setDeletingId] = useState(null)
   const [error, setError] = useState('')
 
   const [history, setHistory] = useState([])
-  const [historyLoading, setHistoryLoading] = useState(true)
+  const [historyLoading, setHistoryLoading] = useState(false)
   const [historyError, setHistoryError] = useState('')
   const [selectedId, setSelectedId] = useState(null)
 
+  const isEditing = Boolean(selectedId)
   const genderLabel =
     gender === 'male' ? '남자' : gender === 'female' ? '여자' : '미선택'
   const calendarLabel = calendarType === 'lunar' ? '음력' : '양력'
 
   useEffect(() => {
+    let cancelled = false
+
+    async function initAuth() {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+
+      if (!cancelled) {
+        setUser(session?.user ?? null)
+        setAuthLoading(false)
+      }
+    }
+
+    initAuth()
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+      setAuthLoading(false)
+    })
+
+    return () => {
+      cancelled = true
+      subscription.unsubscribe()
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!user) {
+      setHistory([])
+      setHistoryLoading(false)
+      setHistoryError('')
+      return
+    }
+
     let cancelled = false
 
     async function loadHistory() {
@@ -83,7 +143,19 @@ function App() {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [user])
+
+  function resetForm() {
+    setSelectedId(null)
+    setName('')
+    setBirthDate('')
+    setBirthTime('')
+    setGender('')
+    setCalendarType('solar')
+    setResult('')
+    setError('')
+    setLoading(false)
+  }
 
   function handleSelectHistory(item) {
     setSelectedId(item.id)
@@ -97,15 +169,7 @@ function App() {
   }
 
   function handleNewSaju() {
-    setSelectedId(null)
-    setName('')
-    setBirthDate('')
-    setBirthTime('')
-    setGender('')
-    setCalendarType('solar')
-    setResult('')
-    setError('')
-    setLoading(false)
+    resetForm()
 
     requestAnimationFrame(() => {
       formTopRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -113,12 +177,77 @@ function App() {
     })
   }
 
+  async function handleSignOut() {
+    setSigningOut(true)
+    setError('')
+
+    try {
+      await signOut()
+      resetForm()
+      setHistory([])
+    } catch (err) {
+      console.error(err)
+      setError(err?.message || '로그아웃에 실패했습니다.')
+    } finally {
+      setSigningOut(false)
+    }
+  }
+
+  async function handleSaveInputOnly() {
+    if (!selectedId || !result) return
+
+    setSavingInput(true)
+    setError('')
+
+    try {
+      const updated = await updateSajuReading(
+        selectedId,
+        buildPayload(name, birthDate, birthTime, gender, calendarType, result),
+      )
+
+      setHistory((prev) =>
+        prev.map((item) => (item.id === updated.id ? updated : item)),
+      )
+    } catch (err) {
+      console.error(err)
+      setError(err?.message || '입력 정보 저장에 실패했습니다.')
+    } finally {
+      setSavingInput(false)
+    }
+  }
+
+  async function handleDelete(id) {
+    const target = history.find((item) => item.id === id)
+    const label = target?.name || '이름 없음'
+
+    if (!window.confirm(`"${label}" 기록을 삭제할까요?`)) return
+
+    setDeletingId(id)
+    setError('')
+
+    try {
+      await deleteSajuReading(id)
+      setHistory((prev) => prev.filter((item) => item.id !== id))
+
+      if (selectedId === id) {
+        handleNewSaju()
+      }
+    } catch (err) {
+      console.error(err)
+      setError(err?.message || '삭제에 실패했습니다.')
+    } finally {
+      setDeletingId(null)
+    }
+  }
+
   async function handleSubmit(e) {
     e.preventDefault()
     setError('')
-    setResult('')
-    setSelectedId(null)
     setLoading(true)
+
+    if (!isEditing) {
+      setResult('')
+    }
 
     try {
       if (!hasApiKey) {
@@ -139,23 +268,43 @@ function App() {
       const text = await askGemini(prompt)
       setResult(text)
 
-      const saved = await saveSajuReading({
-        name: name || '미입력',
-        birth_date: birthDate || null,
-        birth_time: birthTime || null,
-        gender: gender || null,
-        calendar_type: calendarType,
-        result_text: text,
-      })
+      const payload = buildPayload(
+        name,
+        birthDate,
+        birthTime,
+        gender,
+        calendarType,
+        text,
+      )
 
-      setHistory((prev) => [saved, ...prev])
-      setSelectedId(saved.id)
+      if (isEditing) {
+        const updated = await updateSajuReading(selectedId, payload)
+        setHistory((prev) =>
+          prev.map((item) => (item.id === updated.id ? updated : item)),
+        )
+      } else {
+        const saved = await createSajuReading(payload)
+        setHistory((prev) => [saved, ...prev])
+        setSelectedId(saved.id)
+      }
     } catch (err) {
       console.error(err)
       setError(err?.message || 'Gemini API 호출에 실패했습니다.')
     } finally {
       setLoading(false)
     }
+  }
+
+  if (authLoading) {
+    return (
+      <div className="auth-loading">
+        <p>로그인 상태 확인 중…</p>
+      </div>
+    )
+  }
+
+  if (!user) {
+    return <LoginPage />
   }
 
   return (
@@ -166,10 +315,27 @@ function App() {
         selectedId={selectedId}
         onSelect={handleSelectHistory}
         onNewSaju={handleNewSaju}
+        onDelete={handleDelete}
+        deletingId={deletingId}
         error={historyError}
       />
 
       <div className="page" ref={formTopRef}>
+        <div className="auth-bar">
+          <p className="auth-user">
+            <span className="auth-user-label">로그인</span>
+            {getUserLabel(user)}
+          </p>
+          <button
+            type="button"
+            className="auth-logout-btn"
+            disabled={signingOut}
+            onClick={handleSignOut}
+          >
+            {signingOut ? '로그아웃 중…' : '로그아웃'}
+          </button>
+        </div>
+
         <header className="hero">
           <div className="hero-top">
             <p className="brand">saju-me-ko</p>
@@ -183,8 +349,12 @@ function App() {
               </button>
             )}
           </div>
-          <h1>사주 입력</h1>
-          <p className="hero-desc">출생 정보를 입력해 주세요.</p>
+          <h1>{isEditing ? '사주 수정' : '사주 입력'}</h1>
+          <p className="hero-desc">
+            {isEditing
+              ? '입력을 바꾼 뒤 저장하거나, 다시 해석할 수 있습니다.'
+              : '출생 정보를 입력해 주세요.'}
+          </p>
         </header>
 
         <form className="form" onSubmit={handleSubmit}>
@@ -250,9 +420,26 @@ function App() {
             />
           </div>
 
-          <button type="submit" className="submit-btn" disabled={loading}>
-            {loading ? '해석 중...' : '사주 보기'}
-          </button>
+          <div className="form-actions">
+            <button type="submit" className="submit-btn" disabled={loading}>
+              {loading
+                ? '해석 중...'
+                : isEditing
+                  ? '다시 해석'
+                  : '사주 보기'}
+            </button>
+
+            {isEditing && result && (
+              <button
+                type="button"
+                className="secondary-btn"
+                disabled={savingInput || loading}
+                onClick={handleSaveInputOnly}
+              >
+                {savingInput ? '저장 중...' : '입력만 저장'}
+              </button>
+            )}
+          </div>
 
           {!hasApiKey && (
             <p className="env-warning">
@@ -271,9 +458,11 @@ function App() {
           calendarLabel={calendarLabel}
           birthDate={birthDate}
           birthTime={birthTime}
-          fromHistory={Boolean(selectedId)}
+          fromHistory={isEditing}
           selectionKey={selectedId || 'live'}
           onNewSaju={handleNewSaju}
+          onDelete={isEditing ? () => handleDelete(selectedId) : null}
+          deleting={deletingId === selectedId}
         />
       </div>
     </div>

@@ -86,6 +86,8 @@ export default function ResultPanel({
   fromHistory = false,
   selectionKey,
   onNewSaju,
+  onDelete,
+  deleting = false,
 }) {
   const panelRef = useRef(null)
   const [copied, setCopied] = useState(false)
@@ -147,6 +149,16 @@ export default function ResultPanel({
               onClick={onNewSaju}
             >
               새 사주 만들기
+            </button>
+          )}
+          {onDelete && (
+            <button
+              type="button"
+              className="delete-btn"
+              disabled={deleting}
+              onClick={onDelete}
+            >
+              {deleting ? '삭제 중…' : '삭제'}
             </button>
           )}
           {result && (
