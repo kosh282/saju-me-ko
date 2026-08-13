@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
+import { trackEvent } from '../../analytics'
 import {
   formatSajuResult,
   parseLabeledLines,
   parseSajuResult,
-} from './parseResult'
-import { formatBirthTime, formatKoreanDate } from './format'
-import { MyeongdoFigure } from './Myeongdo'
+} from '../../parseResult'
+import { formatBirthTime, formatKoreanDate } from '../../format'
+import { MyeongdoFigure } from '../ui/Myeongdo'
 
 function ResultSkeleton() {
   return (
@@ -123,6 +124,7 @@ export default function ResultPanel({
   async function handleCopy() {
     if (!sections.length) return
     await navigator.clipboard.writeText(formatSajuResult(sections))
+    trackEvent('copy_result', { from_history: Boolean(fromHistory) })
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }

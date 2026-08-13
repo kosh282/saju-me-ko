@@ -1,6 +1,6 @@
-import { IconScroll } from './icons'
-import { MyeongdoSpeech } from './Myeongdo'
-import { formatBirthTime, formatKoreanDate, formatReadingDate } from './format'
+import { formatBirthTime, formatKoreanDate, formatReadingDate } from '../../format'
+import { IconScroll } from '../ui/icons'
+import { MyeongdoSpeech } from '../ui/Myeongdo'
 
 function formatItemName(item) {
   return item.name?.trim() || '이름 없음'

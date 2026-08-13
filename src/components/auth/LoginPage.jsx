@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { signInWithGoogle } from './auth'
-import { MyeongdoFigure } from './Myeongdo'
+import { trackEvent } from '../../analytics'
+import { signInWithGoogle } from '../../auth'
+import { MyeongdoFigure } from '../ui/Myeongdo'
 
 function GoogleIcon() {
   return (
@@ -34,6 +35,7 @@ export default function LoginPage() {
   const [error, setError] = useState('')
 
   async function handleGoogleLogin() {
+    trackEvent('login_click', { method: 'google' })
     setLoading(true)
     setError('')
 
@@ -41,6 +43,10 @@ export default function LoginPage() {
       await signInWithGoogle()
     } catch (err) {
       console.error(err)
+      trackEvent('login_error', {
+        method: 'google',
+        message: err?.message || 'unknown',
+      })
       setError(err?.message || 'Google 로그인에 실패했습니다.')
       setLoading(false)
     }

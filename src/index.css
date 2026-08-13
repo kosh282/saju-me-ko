@@ -463,9 +463,11 @@ textarea:focus-visible {
   position: fixed;
   inset: 0;
   z-index: 1000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: grid;
+  place-items: center;
+  width: 100vw;
+  height: 100dvh;
+  max-height: 100dvh;
   overflow-y: auto;
   overscroll-behavior: contain;
   padding:
@@ -477,12 +479,19 @@ textarea:focus-visible {
   backdrop-filter: blur(6px);
 }
 
+.modal-dialog,
+.confirm-dialog {
+  position: relative;
+  margin: 0;
+  justify-self: center;
+  align-self: center;
+}
+
 .modal-dialog {
   display: flex;
   flex-direction: column;
   width: min(100%, 30rem);
   max-height: min(88dvh, 40rem);
-  margin: auto;
   padding: 0;
   overflow: hidden;
   animation: rise 0.25s ease both;
