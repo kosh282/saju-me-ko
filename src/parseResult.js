@@ -11,14 +11,14 @@ function matchSectionTitle(rawTitle) {
   if (SECTION_BY_TITLE[title]) return SECTION_BY_TITLE[title]
 
   const aliases = [
-    { id: 'chart', pattern: /명식|년주|사주\s*명식/ },
+    { id: 'snapshot', pattern: /한눈|한\s*줄|정체성|요약\s*보기|전체\s*요약/ },
+    { id: 'themes', pattern: /핵심\s*주제|인생\s*주제|주제/ },
     { id: 'personality', pattern: /성격|기질|재능/ },
-    { id: 'career', pattern: /재물|일운|커리어|직업|일\s*과/ },
     { id: 'relationship', pattern: /연애|관계|대인/ },
-    { id: 'strength', pattern: /돋보|강점|장점|특징/ },
-    { id: 'weakness', pattern: /약점|단점/ },
-    { id: 'unique', pattern: /특이/ },
-    { id: 'fortuneSummary', pattern: /운세|한줄\s*요약|요약/ },
+    { id: 'career', pattern: /재물|일운|커리어|직업|일\s*과|일과/ },
+    { id: 'yearFlow', pattern: /올해|세운|흐름|운세|한줄\s*요약/ },
+    { id: 'balance', pattern: /강점|주의|약점|단점|돋보|특징|특이/ },
+    { id: 'chart', pattern: /명식|년주|사주\s*명식/ },
   ]
 
   const found = aliases.find((a) => a.pattern.test(title))
@@ -89,12 +89,13 @@ function parseByKeywords(text) {
   const detectId = (block) => {
     const head = block.slice(0, 100)
     if (/명식|년주|월주|일주|시주|오행/.test(head)) return 'chart'
-    if (/재물|일운|커리어|직업/.test(head)) return 'career'
+    if (/한눈|정체성|한\s*줄로/.test(head)) return 'snapshot'
+    if (/핵심\s*주제|인생\s*주제|선택의\s*기준|반복되는\s*인생/.test(head))
+      return 'themes'
+    if (/올해|세운|흐름|재물운|연애운|건강운|올해운/.test(head)) return 'yearFlow'
+    if (/재물|일운|커리어|직업|일과/.test(head)) return 'career'
     if (/연애|관계|대인/.test(head)) return 'relationship'
-    if (/약점|단점/.test(head)) return 'weakness'
-    if (/특이|독특/.test(head)) return 'unique'
-    if (/돋보|강점|장점/.test(head)) return 'strength'
-    if (/운세|한줄\s*요약|재물운|연애운|건강운|올해운/.test(head)) return 'fortuneSummary'
+    if (/강점|주의|약점|단점|돋보|특이/.test(head)) return 'balance'
     if (/성격|기질|재능/.test(head)) return 'personality'
     return null
   }
@@ -142,19 +143,24 @@ export function parseSajuResult(text) {
   ]
 }
 
-/** 운세 한줄 요약 → 라벨/본문 분리 */
-export function parseFortuneLines(content) {
+/** "라벨: 본문" 줄 분리 (핵심 주제·운세 요약 등) */
+export function parseLabeledLines(content) {
   return content
     .split('\n')
     .map((line) => line.trim())
     .filter(Boolean)
     .map((line) => {
-      const match = line.match(/^(.+?[운]|.+?요약)\s*[:：]\s*(.+)$/)
+      const match = line.match(/^(.+?)\s*[:：]\s*(.+)$/)
       if (match) {
         return { label: match[1].trim(), text: match[2].trim() }
       }
       return { label: null, text: line }
     })
+}
+
+/** @deprecated parseLabeledLines 사용 */
+export function parseFortuneLines(content) {
+  return parseLabeledLines(content)
 }
 
 /** 복사용 — 섹션별로 깔끔한 텍스트 */

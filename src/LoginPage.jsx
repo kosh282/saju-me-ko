@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { signInWithGoogle } from './auth'
+import { MyeongdoFigure } from './Myeongdo'
 
 function GoogleIcon() {
   return (
@@ -47,13 +48,19 @@ export default function LoginPage() {
 
   return (
     <div className="login-page">
-      <div className="login-card">
-        <p className="brand login-brand">saju-me-ko</p>
-        <h1 className="login-title">사주 보기 서비스</h1>
+      <div className="login-card scroll-panel">
+        <MyeongdoFigure
+          pose="welcome"
+          size="xl"
+          className="login-mascot"
+          alt="사주 안내 캐릭터 명도"
+        />
+        <p className="brand-kicker">AI 사주 가이드</p>
+        <p className="brand login-brand">명도</p>
         <p className="login-desc">
-          Google 계정으로 로그인하면
+          출생 정보로 사주를 보고,
           <br />
-          나만의 사주 기록을 저장하고 볼 수 있습니다.
+          나만의 해석 기록을 남겨보세요.
         </p>
 
         <button
@@ -65,12 +72,10 @@ export default function LoginPage() {
           <span className="google-login-btn-inner">
             <GoogleIcon />
             <span className="google-login-text">
-              {loading ? '로그인 중...' : 'Google 계정으로 로그인'}
+              {loading ? '로그인 중...' : 'Google로 시작하기'}
             </span>
           </span>
         </button>
-
-        <p className="login-note">안전한 Google 인증을 사용합니다.</p>
 
         {error && <p className="login-error">{error}</p>}
       </div>

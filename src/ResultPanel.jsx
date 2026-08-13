@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import {
   formatSajuResult,
-  parseFortuneLines,
+  parseLabeledLines,
   parseSajuResult,
 } from './parseResult'
+import { formatBirthTime, formatKoreanDate } from './format'
+import { MyeongdoFigure } from './Myeongdo'
 
 function ResultSkeleton() {
   return (
@@ -17,21 +19,24 @@ function ResultSkeleton() {
 }
 
 function SectionBody({ section }) {
-  if (section.id === 'fortuneSummary') {
-    const lines = parseFortuneLines(section.content)
+  if (section.id === 'themes') {
+    const lines = parseLabeledLines(section.content)
+    const hasLabels = lines.some((line) => line.label)
 
-    return (
-      <ul className="fortune-summary">
-        {lines.map((line, i) => (
-          <li key={i} className="fortune-summary-item">
-            {line.label && (
-              <span className="fortune-summary-label">{line.label}</span>
-            )}
-            <span className="fortune-summary-text">{line.text}</span>
-          </li>
-        ))}
-      </ul>
-    )
+    if (hasLabels) {
+      return (
+        <ul className="fortune-summary theme-summary">
+          {lines.map((line, i) => (
+            <li key={i} className="fortune-summary-item">
+              {line.label && (
+                <span className="fortune-summary-label">{line.label}</span>
+              )}
+              <span className="fortune-summary-text">{line.text}</span>
+            </li>
+          ))}
+        </ul>
+      )
+    }
   }
 
   if (section.id === 'chart') {
@@ -63,14 +68,14 @@ function SectionBody({ section }) {
 }
 
 const SECTION_TONE = {
-  chart: 'chart',
+  snapshot: 'summary',
+  themes: 'positive',
   personality: 'soft',
-  career: 'soft',
   relationship: 'soft',
-  strength: 'positive',
-  weakness: 'caution',
-  unique: 'accent',
-  fortuneSummary: 'summary',
+  career: 'soft',
+  yearFlow: 'accent',
+  balance: 'caution',
+  chart: 'chart',
   general: 'soft',
 }
 
@@ -85,18 +90,19 @@ export default function ResultPanel({
   birthTime,
   fromHistory = false,
   selectionKey,
-  onNewSaju,
   onDelete,
   deleting = false,
+  disabled = false,
 }) {
   const panelRef = useRef(null)
   const [copied, setCopied] = useState(false)
+  const [showTop, setShowTop] = useState(false)
   const sections = parseSajuResult(result)
 
   const chips = [
     genderLabel !== '미선택' ? genderLabel : null,
-    birthDate ? `${calendarLabel} ${birthDate}` : null,
-    birthTime || null,
+    birthDate ? `${calendarLabel} ${formatKoreanDate(birthDate)}` : null,
+    birthTime ? formatBirthTime(birthTime) : null,
   ].filter(Boolean)
 
   useEffect(() => {
@@ -104,6 +110,15 @@ export default function ResultPanel({
       panelRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }
   }, [loading, result, selectionKey])
+
+  useEffect(() => {
+    function onScroll() {
+      setShowTop(window.scrollY > 480)
+    }
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
 
   async function handleCopy() {
     if (!sections.length) return
@@ -115,91 +130,109 @@ export default function ResultPanel({
   if (!loading && !error && !result) return null
 
   return (
-    <section
-      ref={panelRef}
-      key={selectionKey || 'live'}
-      className={`result-panel ${fromHistory ? 'result-panel--history' : ''}`}
-      aria-live="polite"
-      aria-busy={loading}
-    >
-      <header className="result-header">
-        <div className="result-header-main">
-          {fromHistory && <p className="result-badge">저장된 해석</p>}
-          <p className="result-eyebrow">사주 해석</p>
-          <h2 className="result-title">
-            {name ? `${name}님의 사주` : '사주 해석 결과'}
-          </h2>
+    <>
+      <section
+        ref={panelRef}
+        key={selectionKey || 'live'}
+        className={`result-panel scroll-panel ${fromHistory ? 'result-panel--history' : ''}`}
+        aria-live="polite"
+        aria-busy={loading}
+      >
+        <header className="result-header">
+          <div className="result-header-main">
+            {fromHistory && <p className="result-badge">저장된 해석</p>}
+            <p className="result-eyebrow">사주 해석</p>
+            <h2 className="result-title">
+              {name ? `${name}님의 사주` : '사주 해석 결과'}
+            </h2>
 
-          {chips.length > 0 && (
-            <ul className="result-chips">
-              {chips.map((chip) => (
-                <li key={chip} className="result-chip">
-                  {chip}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+            {chips.length > 0 && (
+              <ul className="result-chips">
+                {chips.map((chip) => (
+                  <li key={chip} className="result-chip">
+                    {chip}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
 
-        <div className="result-actions">
-          {onNewSaju && (
-            <button
-              type="button"
-              className="new-saju-btn new-saju-btn--panel"
-              onClick={onNewSaju}
-            >
-              새 사주 만들기
-            </button>
-          )}
-          {onDelete && (
-            <button
-              type="button"
-              className="delete-btn"
-              disabled={deleting}
-              onClick={onDelete}
-            >
-              {deleting ? '삭제 중…' : '삭제'}
-            </button>
-          )}
-          {result && (
-            <button type="button" className="copy-btn" onClick={handleCopy}>
-              {copied ? '복사됨' : '복사하기'}
-            </button>
-          )}
-        </div>
-      </header>
-
-      {loading && (
-        <div className="result-loading">
-          <p className="result-loading-text">명식을 세우고 해석 중입니다…</p>
-          <ResultSkeleton />
-        </div>
-      )}
-
-      {error && <p className="error result-error">{error}</p>}
-
-      {!loading && result && (
-        <div className="result-body">
-          {sections.map((section, index) => {
-            const tone = SECTION_TONE[section.id] || 'soft'
-            return (
-              <article
-                key={`${section.id}-${index}`}
-                className={`result-card result-card--${tone}`}
-                style={{ animationDelay: `${index * 0.05}s` }}
+          <div className="result-actions">
+            {onDelete && (
+              <button
+                type="button"
+                className="delete-btn"
+                disabled={disabled || deleting}
+                onClick={onDelete}
               >
-                <div className="result-card-head">
-                  <span className="result-card-index">
-                    {String(index + 1).padStart(2, '0')}
-                  </span>
-                  <h3 className="result-card-title">{section.title}</h3>
-                </div>
-                <SectionBody section={section} />
-              </article>
-            )
-          })}
-        </div>
+                {deleting ? '삭제 중…' : '삭제'}
+              </button>
+            )}
+            {result && !loading && (
+              <button
+                type="button"
+                className="copy-btn"
+                disabled={disabled}
+                onClick={handleCopy}
+              >
+                {copied ? '복사됨' : '복사하기'}
+              </button>
+            )}
+          </div>
+        </header>
+
+        {loading && (
+          <div className="result-loading">
+            <MyeongdoFigure
+              pose="analyzing"
+              size="xl"
+              className="result-loading-mascot"
+              alt="명도가 사주를 분석하는 중"
+            />
+            <p className="result-loading-text">
+              명도가 명식을 세우고 해석 중이에요…
+            </p>
+            <ResultSkeleton />
+          </div>
+        )}
+
+        {error && <p className="error result-error">{error}</p>}
+
+        {!loading && result && (
+          <div className="result-body">
+            {sections.map((section, index) => {
+              const tone = SECTION_TONE[section.id] || 'soft'
+              return (
+                <article
+                  key={`${section.id}-${index}`}
+                  className={`result-card result-card--${tone}`}
+                  style={{ animationDelay: `${index * 0.05}s` }}
+                >
+                  <div className="result-card-head">
+                    <span className="result-card-index">
+                      {String(index + 1).padStart(2, '0')}
+                    </span>
+                    <h3 className="result-card-title">{section.title}</h3>
+                  </div>
+                  <SectionBody section={section} />
+                </article>
+              )
+            })}
+          </div>
+        )}
+      </section>
+
+      {showTop && result && !loading && (
+        <button
+          type="button"
+          className="back-to-top"
+          onClick={() =>
+            panelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+          }
+        >
+          맨 위로
+        </button>
       )}
-    </section>
+    </>
   )
 }
